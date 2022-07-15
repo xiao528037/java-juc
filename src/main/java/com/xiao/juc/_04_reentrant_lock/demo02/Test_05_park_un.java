@@ -55,7 +55,7 @@ class WaitNotify02 {
      */
     public void printParkUn(String content, Integer current, Thread thread) {
         for (int i = 0; i < loopNumber; i++) {
-            while (current.intValue() != flag.intValue()) {
+            while (!current.equals(flag)) {
                 //进入等待，
                 LockSupport.park();
             }
