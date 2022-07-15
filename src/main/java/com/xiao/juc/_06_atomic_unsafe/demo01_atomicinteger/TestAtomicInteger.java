@@ -10,7 +10,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * @createTime 2022-07-15 10:29:59
  * @description
  */
-public class TestAtomicInteger implements AtomicInterface {
+public class TestAtomicInteger<T> implements AtomicInterface<AtomicInteger> {
     private AtomicInteger money;
 
     public TestAtomicInteger(AtomicInteger money) {
@@ -22,10 +22,10 @@ public class TestAtomicInteger implements AtomicInterface {
     }
 
     @Override
-    public void withdraw(Integer amount) {
+    public void withdraw(AtomicInteger amount) {
         while (money.get() != 0) {
             int i = money.get();
-            int i1 = i - amount;
+            int i1 = i - amount.get();
             if (money.compareAndSet(i, i1)) {
                 break;
             }
@@ -33,9 +33,16 @@ public class TestAtomicInteger implements AtomicInterface {
     }
 
     @Override
-    public void save(Integer amount) {
+    public void save(AtomicInteger amount) {
 
     }
+
+    @Override
+    public AtomicInteger get() {
+        return null;
+    }
+
+
 }
 
 

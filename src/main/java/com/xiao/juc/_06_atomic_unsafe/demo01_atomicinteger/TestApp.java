@@ -23,7 +23,7 @@ public class TestApp {
             final int finalI = i + 1;
             Thread thread = new Thread(() -> {
                 for (int j = 0; j < finalI; j++) {
-                    testAtomicInteger.withdraw(10);
+                    testAtomicInteger.withdraw(new AtomicInteger(10));
                 }
 
             });
@@ -38,7 +38,7 @@ public class TestApp {
     public void test02() {
         TestAtomicInteger testAtomicInteger = new TestAtomicInteger(new AtomicInteger(10000));
         new Thread(() -> {
-            testAtomicInteger.withdraw(100);
+            testAtomicInteger.withdraw(new AtomicInteger(100));
         }).start();
     }
 
