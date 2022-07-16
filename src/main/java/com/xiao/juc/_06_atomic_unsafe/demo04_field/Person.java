@@ -1,4 +1,4 @@
-package com.xiao.juc._06_atomic_unsafe.dmoe04_field;
+package com.xiao.juc._06_atomic_unsafe.demo04_field;
 
 /**
  * @author aloneMan
