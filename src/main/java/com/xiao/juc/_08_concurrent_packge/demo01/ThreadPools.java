@@ -4,6 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.HashSet;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * @author aloneMan
@@ -17,7 +18,7 @@ public class ThreadPools<T extends TaskInterface> {
     /**
      * 任务队列
      */
-    private BlockingQueue<T> taskQueue = new BlockingQueue<>();
+    private BlockingQueue<T> taskQueue = new BlockingQueue<>(2);
 
     /**
      * 线程集合
@@ -26,11 +27,11 @@ public class ThreadPools<T extends TaskInterface> {
     /**
      * 核心线程数量
      */
-    private Integer coreSize = 10;
+    private Integer coreSize = 2;
     /**
      * 最大线程数量
      */
-    private Integer maxSize = 20;
+    private Integer maxSize = 2;
     /**
      * 获取任务超时时间，默认1000纳秒
      */
@@ -41,10 +42,19 @@ public class ThreadPools<T extends TaskInterface> {
     private TimeUnit timeUnit = TimeUnit.NANOSECONDS;
 
     /**
+     * 等待超时的执行策略
+     */
+    private RejectPolicy<T> rejectPolicy;
+
+    private AtomicBoolean[] atomicBooleans;
+
+    /**
      * 初始化
      */
-    public ThreadPools() {
-
+    public ThreadPools(Integer coreSize, Integer maxSize, RejectPolicy rejectPolicy) {
+        this.rejectPolicy = rejectPolicy;
+        this.coreSize = coreSize;
+        this.maxSize = maxSize;
     }
 
     /**
@@ -67,7 +77,6 @@ public class ThreadPools<T extends TaskInterface> {
         if (coreSize.equals(maxSize)) {//已经达到最大扩容
             //log.info("{} 线程扩容失败,当前线程池已经扩容到最大! coreSize {}", Thread.currentThread().getName(), coreSize);
         }
-
         //当容量充足时
         synchronized (taskQueue) {
             if (runTasks.size() < coreSize) {
@@ -76,18 +85,13 @@ public class ThreadPools<T extends TaskInterface> {
                 executeTask.start();
             } else {
                 //放入任务队列队列中
-                taskQueue.setTask(t);
+//                boolean isSuccess = taskQueue.setTask(t);
+                taskQueue.tryPut(rejectPolicy, t);
+
             }
         }
-
-
     }
 
-    public BlockingQueue getTaskQueue() {
-        synchronized (taskQueue) {
-            return taskQueue;
-        }
-    }
 
 
     class ExecuteTask<T extends TaskInterface> extends Thread {
@@ -103,11 +107,11 @@ public class ThreadPools<T extends TaskInterface> {
         public void run() {
             //函数表达式不为空执行函数或者getTask获取任务，也不为空，则执行函数
             while (t != null || (t = (T) taskQueue.getTask()) != null) {
-                log.debug("{} 执行结果", t.implementTask());
+                t.implementTask();
                 t = null;
             }
             synchronized (runTasks) {
-                log.debug("当前线程结束");
+//                log.debug("当前线程结束");
                 runTasks.remove(this);
             }
 

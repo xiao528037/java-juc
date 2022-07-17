@@ -9,18 +9,31 @@ import org.junit.jupiter.api.Test;
  * @createTime 2022-07-16 19:28:38
  * @description
  */
-@Slf4j
+@Slf4j(topic = "c.test")
 public class TestApp {
     @Test
     public void test1() throws InterruptedException {
-        Thread.sleep(20000);
-        ThreadPools<Task> taskThreadPools = new ThreadPools<>();
-        for (int i = 0; i < 400000; i++) {
+//        Thread.sleep(20000);
+        ThreadPools<Task> taskThreadPools = new ThreadPools<>(1, 2, (queue, task) -> {
+            log.debug("拒绝策略");
+//            queue.setTask(task);
+            queue.setTask(task, 3000L);
+        });
+        for (int i = 0; i < 5; i++) {
             int j = i;
 
-            taskThreadPools.execute(new Task(() -> j + 1, x -> x));
+            taskThreadPools.execute(new Task(() -> j + 1, x -> {
+                log.debug("ture out {}", x);
+                try {
+                    Thread.sleep(2000);
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
+                return x;
+            }));
+
         }
-        Thread.sleep(1000);
+        Thread.sleep(5000);
     }
 
     @Test

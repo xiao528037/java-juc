@@ -19,6 +19,12 @@ public class Task<T, R> implements TaskInterface<R> {
         this.parameter = parameter;
     }
 
+    private void setTask(Supplier<T> parameter, Function<T, R> performTasks) {
+        this.performTasks = performTasks;
+        this.parameter = parameter;
+    }
+
+    @Override
     public R implementTask() {
         return performTasks.apply(parameter.get());
     }

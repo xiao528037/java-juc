@@ -89,7 +89,7 @@ public class BlockingQueue<T> {
                     try {
                         boolean isTimeout = emptyWaitSet.await(nanoTime, timeUnit);
                         if (!isTimeout) {
-                            log.error("任务队列为空，等待超时");
+                            log.error("任务队列为空");
                             return null;
                         }
                         if (tDeque.size() == 0) {
@@ -116,18 +116,18 @@ public class BlockingQueue<T> {
      *
      * @param task
      *         需要线程去执行的任务
-     * @param nanoTime
+     * @param waitTime
      *         等待超时的时间
      * @return ture添加成功 false添加失败
      */
-    public boolean setTask(T task, Long nanoTime) {
+    public boolean setTask(T task, Long waitTime) {
         lock.lock();
         try {
             if (isFull()) {
                 //如果队列满了，进入等待
-                boolean isTimeout = fullWaitSet.await(nanoTime, timeUnit);
+                boolean isTimeout = fullWaitSet.await(waitTime, timeUnit);
                 if (!isTimeout) {
-                    log.debug("任务队列满了，等待超时");
+                    log.debug("任务队列已满");
                     return false;
                 }
             }
@@ -160,7 +160,7 @@ public class BlockingQueue<T> {
      * @return 返回任务
      */
     public T getTask() {
-            return getTask(this.waitTime);
+        return getTask(this.waitTime);
     }
 
     /**
@@ -200,6 +200,29 @@ public class BlockingQueue<T> {
         lock.lock();
         try {
             return tDeque.size();
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    /**
+     * 拥有拒绝策略的任务添加
+     *
+     * @param rejectPolicy
+     *         函数式子操作
+     * @param task
+     *         任务操作
+     */
+    public void tryPut(RejectPolicy<T> rejectPolicy, T task) {
+        lock.lock();
+        try {
+            //再次进行判断队列是否满了
+            if (isFull()) {
+                //如果满了执行策略
+                rejectPolicy.reject(this, task);
+            } else {
+                 setTask(task);
+            }
         } finally {
             lock.unlock();
         }
