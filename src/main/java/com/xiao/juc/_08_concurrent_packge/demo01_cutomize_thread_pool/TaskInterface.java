@@ -1,4 +1,4 @@
-package com.xiao.juc._08_concurrent_packge.demo01;
+package com.xiao.juc._08_concurrent_packge.demo01_cutomize_thread_pool;
 
 /**
  * @author aloneMan
